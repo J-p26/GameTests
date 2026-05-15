@@ -71,14 +71,19 @@
             background-color: lightgrey;
         }
 
-        #instructions, #status, #game-over-message {
-            margin: 15px 0;
+        #instructions, #status, #game-over-message, #speed-info {
+            margin: 10px 0;
             font-size: 16px;
         }
 
         #game-over-message {
             font-size: 24px;
             color: red;
+        }
+
+        #speed-info {
+            font-weight: bold;
+            color: #333;
         }
     </style>
 </head>
@@ -90,6 +95,7 @@
             <p>Select grid size (8-20), then click Start Game.</p>
             <p>Click the black square to select it, then click a neighboring light grey square to move it.</p>
             <p>The red square (AI) will move toward the black square every second.</p>
+            <p>Every 20 moves, the red square speeds up!</p>
             <p>If the red square catches the black square, it's game over!</p>
         </div>
         <div>
@@ -102,6 +108,7 @@
     <!-- Game Screen -->
     <div id="game-screen">
         <h1>Grid Square Game</h1>
+        <div id="speed-info">Red Square Moves: 0 | Speed: 1.0s</div>
         <div id="grid-container"></div>
         <div id="status">Click the black square to select it, then click a neighboring light grey square to move it.</div>
     </div>
@@ -121,6 +128,8 @@
         let blackSquareIndex = null;
         let redSquareIndex = null;
         let aiInterval = null;
+        let redSquareMoveCount = 0;
+        let aiIntervalTime = 1000; // Start at 1 second
 
         // DOM elements
         const startScreen = document.getElementById('start-screen');
@@ -129,6 +138,7 @@
         const startButton = document.getElementById('start-button');
         const restartButton = document.getElementById('restart-button');
         const gridSizeInput = document.getElementById('grid-size');
+        const speedInfo = document.getElementById('speed-info');
 
         // Initialize
         startScreen.style.display = 'block';
@@ -149,12 +159,18 @@
         // Restart the game
         restartButton.addEventListener('click', () => {
             if (aiInterval) clearInterval(aiInterval);
+            redSquareMoveCount = 0;
+            aiIntervalTime = 1000;
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'block';
         });
 
         // Create the grid
         function createGrid() {
+            redSquareMoveCount = 0;
+            aiIntervalTime = 1000;
+            speedInfo.textContent = `Red Square Moves: ${redSquareMoveCount} | Speed: ${aiIntervalTime / 1000.0}s`;
+
             const gridContainer = document.getElementById('grid-container');
             gridContainer.innerHTML = '';
             gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
@@ -187,7 +203,7 @@
             // Clear any existing AI interval
             if (aiInterval) clearInterval(aiInterval);
             // Start AI movement
-            aiInterval = setInterval(moveAISquare, 1000);
+            aiInterval = setInterval(moveAISquare, aiIntervalTime);
 
             updateGrid();
         }
@@ -287,6 +303,15 @@
                 grid[redSquareIndex] = null;
                 grid[bestMove] = 'red';
                 redSquareIndex = bestMove;
+
+                // Increment move count and update speed
+                redSquareMoveCount++;
+                if (redSquareMoveCount % 20 === 0 && aiIntervalTime > 100) {
+                    aiIntervalTime -= 100; // Decrease interval by 0.1s (100ms)
+                    clearInterval(aiInterval);
+                    aiInterval = setInterval(moveAISquare, aiIntervalTime);
+                }
+                speedInfo.textContent = `Red Square Moves: ${redSquareMoveCount} | Speed: ${(aiIntervalTime / 1000).toFixed(1)}s`;
 
                 // Check for collision
                 if (redSquareIndex === blackSquareIndex) {
