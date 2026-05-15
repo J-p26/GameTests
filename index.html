@@ -19,32 +19,21 @@
         #start-screen, #game-screen, #game-over-screen {
             width: 100%;
             max-width: 600px;
-            margin: 0 auto;
         }
 
         #game-screen, #game-over-screen {
             display: none;
         }
 
-        #controls {
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-
-        input, button {
-            padding: 8px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
         button {
+            padding: 10px 20px;
+            font-size: 16px;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
         }
 
         button:hover {
@@ -58,7 +47,7 @@
             border: 2px solid #333;
             max-width: 90vw;
             max-height: 90vw;
-            margin: 0 auto;
+            margin: 20px auto;
         }
 
         .grid-cell {
@@ -67,9 +56,6 @@
             min-width: 40px;
             min-height: 40px;
             border: 1px solid #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             cursor: pointer;
         }
 
@@ -85,21 +71,14 @@
             background-color: lightgrey;
         }
 
-        #status {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-
-        #instructions {
-            margin-bottom: 20px;
+        #instructions, #status, #game-over-message {
+            margin: 15px 0;
             font-size: 16px;
-            line-height: 1.5;
         }
 
         #game-over-message {
             font-size: 24px;
             color: red;
-            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -108,11 +87,12 @@
     <div id="start-screen">
         <h1>Grid Square Game</h1>
         <div id="instructions">
+            <p>Select grid size (8-20), then click Start Game.</p>
             <p>Click the black square to select it, then click a neighboring light grey square to move it.</p>
             <p>The red square (AI) will move toward the black square every second.</p>
             <p>If the red square catches the black square, it's game over!</p>
         </div>
-        <div id="controls">
+        <div>
             <label for="grid-size">Grid Size (8-20):</label>
             <input type="number" id="grid-size" min="8" max="20" value="10">
         </div>
@@ -134,6 +114,7 @@
     </div>
 
     <script>
+        // Game state
         let gridSize = 10;
         let selectedSquare = null;
         let grid = [];
@@ -149,44 +130,38 @@
         const restartButton = document.getElementById('restart-button');
         const gridSizeInput = document.getElementById('grid-size');
 
-        // Initialize screens
+        // Initialize
         startScreen.style.display = 'block';
-        gameScreen.style.display = 'none';
-        gameOverScreen.style.display = 'none';
 
         // Start the game
         startButton.addEventListener('click', () => {
             gridSize = parseInt(gridSizeInput.value);
             if (gridSize < 8 || gridSize > 20) {
-                alert('Please enter a grid size between 8 and 20.');
+                alert('Grid size must be between 8 and 20.');
                 return;
             }
             startScreen.style.display = 'none';
             gameScreen.style.display = 'block';
             gameOverScreen.style.display = 'none';
-            createGrid(gridSize);
+            createGrid();
         });
 
         // Restart the game
         restartButton.addEventListener('click', () => {
+            if (aiInterval) clearInterval(aiInterval);
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'block';
-            gameScreen.style.display = 'none';
-            // Clear AI interval if it exists
-            if (aiInterval) {
-                clearInterval(aiInterval);
-                aiInterval = null;
-            }
         });
 
-        function createGrid(size) {
-            gridSize = size;
+        // Create the grid
+        function createGrid() {
             const gridContainer = document.getElementById('grid-container');
             gridContainer.innerHTML = '';
-            gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-            grid = Array(size * size).fill(null);
+            gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            grid = Array(gridSize * gridSize).fill(null);
 
-            for (let i = 0; i < size * size; i++) {
+            // Create grid cells
+            for (let i = 0; i < gridSize * gridSize; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'grid-cell';
                 cell.dataset.index = i;
@@ -194,14 +169,14 @@
                 gridContainer.appendChild(cell);
             }
 
-            // Place the black square in the center
-            blackSquareIndex = Math.floor(size * size / 2);
+            // Place black square in the center
+            blackSquareIndex = Math.floor(gridSize * gridSize / 2);
             grid[blackSquareIndex] = 'black';
 
-            // Place the red square at least 4 blocks away from the black square
+            // Place red square at least 4 blocks away
             let randomIndex;
             do {
-                randomIndex = Math.floor(Math.random() * size * size);
+                randomIndex = Math.floor(Math.random() * gridSize * gridSize);
             } while (
                 randomIndex === blackSquareIndex ||
                 getDistance(randomIndex, blackSquareIndex) < 4
@@ -210,15 +185,14 @@
             grid[redSquareIndex] = 'red';
 
             // Clear any existing AI interval
-            if (aiInterval) {
-                clearInterval(aiInterval);
-            }
+            if (aiInterval) clearInterval(aiInterval);
             // Start AI movement
             aiInterval = setInterval(moveAISquare, 1000);
 
             updateGrid();
         }
 
+        // Calculate Manhattan distance
         function getDistance(index1, index2) {
             const row1 = Math.floor(index1 / gridSize);
             const col1 = index1 % gridSize;
@@ -227,16 +201,15 @@
             return Math.abs(row1 - row2) + Math.abs(col1 - col2);
         }
 
+        // Handle cell clicks
         function handleCellClick(index) {
             if (selectedSquare === null) {
-                // Select the square if it's black
                 if (grid[index] === 'black') {
                     selectedSquare = index;
                     highlightNeighbors(index);
-                    document.getElementById('status').textContent = `Selected black square. Click a neighboring light grey square to move it.`;
+                    document.getElementById('status').textContent = 'Selected black square. Click a neighboring light grey square to move it.';
                 }
             } else {
-                // Move the black square to the new position if it's a neighbor
                 if (isNeighbor(selectedSquare, index)) {
                     grid[selectedSquare] = null;
                     grid[index] = 'black';
@@ -249,6 +222,7 @@
             }
         }
 
+        // Highlight neighbors
         function highlightNeighbors(index) {
             clearHighlights();
             const neighbors = getNeighbors(index);
@@ -260,34 +234,31 @@
             });
         }
 
+        // Clear highlights
         function clearHighlights() {
             document.querySelectorAll('.highlight').forEach(cell => {
                 cell.classList.remove('highlight');
             });
         }
 
+        // Get neighbors
         function getNeighbors(index) {
             const neighbors = [];
             const row = Math.floor(index / gridSize);
             const col = index % gridSize;
-
-            // Up
-            if (row > 0) neighbors.push(index - gridSize);
-            // Down
-            if (row < gridSize - 1) neighbors.push(index + gridSize);
-            // Left
-            if (col > 0) neighbors.push(index - 1);
-            // Right
-            if (col < gridSize - 1) neighbors.push(index + 1);
-
+            if (row > 0) neighbors.push(index - gridSize); // Up
+            if (row < gridSize - 1) neighbors.push(index + gridSize); // Down
+            if (col > 0) neighbors.push(index - 1); // Left
+            if (col < gridSize - 1) neighbors.push(index + 1); // Right
             return neighbors;
         }
 
+        // Check if index2 is a neighbor of index1
         function isNeighbor(index1, index2) {
-            const neighbors = getNeighbors(index1);
-            return neighbors.includes(index2);
+            return getNeighbors(index1).includes(index2);
         }
 
+        // Move AI square
         function moveAISquare() {
             if (blackSquareIndex === null || redSquareIndex === null) return;
 
@@ -295,7 +266,7 @@
             let bestMove = null;
             let minDistance = Infinity;
 
-            // Find the neighbor that minimizes the distance to the black square
+            // Find the best move
             for (const neighbor of neighbors) {
                 if (grid[neighbor] === null) {
                     const distance = getDistance(neighbor, blackSquareIndex);
@@ -306,9 +277,7 @@
                         // Tie-breaker: prefer rightmost move
                         const currentCol = redSquareIndex % gridSize;
                         const neighborCol = neighbor % gridSize;
-                        if (neighborCol > currentCol) {
-                            bestMove = neighbor;
-                        }
+                        if (neighborCol > currentCol) bestMove = neighbor;
                     }
                 }
             }
@@ -319,31 +288,29 @@
                 grid[bestMove] = 'red';
                 redSquareIndex = bestMove;
 
-                // Check for game over
+                // Check for collision
                 if (redSquareIndex === blackSquareIndex) {
                     clearInterval(aiInterval);
                     gameOver();
-                    return;
                 }
 
                 updateGrid();
             }
         }
 
+        // Game over
         function gameOver() {
             gameScreen.style.display = 'none';
             gameOverScreen.style.display = 'block';
         }
 
+        // Update grid UI
         function updateGrid() {
             const cells = document.querySelectorAll('.grid-cell');
             cells.forEach((cell, i) => {
                 cell.className = 'grid-cell';
-                if (grid[i] === 'black') {
-                    cell.classList.add('black-square');
-                } else if (grid[i] === 'red') {
-                    cell.classList.add('red-square');
-                }
+                if (grid[i] === 'black') cell.classList.add('black-square');
+                else if (grid[i] === 'red') cell.classList.add('red-square');
             });
         }
     </script>
