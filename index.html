@@ -221,7 +221,7 @@
             return Math.abs(row1 - row2) + Math.abs(col1 - col2);
         }
 
-        // Handle cell clicks
+        // Handle cell clicks (black square movement)
         function handleCellClick(index) {
             if (selectedSquare === null) {
                 if (grid[index] === 'black') {
@@ -230,7 +230,7 @@
                     document.getElementById('status').textContent = 'Selected black square. Click a neighboring light grey square to move it.';
                 }
             } else {
-                if (isNeighbor(selectedSquare, index)) {
+                if (isNeighbor(selectedSquare, index) && grid[index] === null) {
                     grid[selectedSquare] = null;
                     grid[index] = 'black';
                     blackSquareIndex = index;
@@ -242,7 +242,7 @@
             }
         }
 
-        // Highlight neighbors
+        // Highlight neighbors (only empty cells for black square)
         function highlightNeighbors(index) {
             clearHighlights();
             const neighbors = getNeighbors(index);
@@ -278,7 +278,7 @@
             return getNeighbors(index1).includes(index2);
         }
 
-        // Move AI square
+        // Move AI square (red square)
         function moveAISquare() {
             if (blackSquareIndex === null || redSquareIndex === null) return;
 
@@ -308,6 +308,13 @@
                 grid[bestMove] = 'red';
                 redSquareIndex = bestMove;
 
+                // Check for collision (red square catches black square)
+                if (redSquareIndex === blackSquareIndex) {
+                    clearInterval(aiInterval);
+                    gameOver();
+                    return;
+                }
+
                 // Increment move count and update speed
                 redSquareMoveCount++;
                 if (redSquareMoveCount % 20 === 0 && aiIntervalTime > 100) {
@@ -316,13 +323,6 @@
                     aiInterval = setInterval(moveAISquare, aiIntervalTime);
                 }
                 speedInfo.textContent = `Red Square Moves: ${redSquareMoveCount} | Speed: ${(aiIntervalTime / 1000).toFixed(1)}s`;
-
-                // Check for collision (red square catches black square)
-                if (redSquareIndex === blackSquareIndex) {
-                    clearInterval(aiInterval);
-                    gameOver();
-                    return;
-                }
 
                 updateGrid();
             }
