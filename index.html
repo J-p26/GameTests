@@ -17,14 +17,13 @@
         }
 
         #start-screen, #game-screen, #game-over-screen {
-            display: none;
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
         }
 
-        #start-screen {
-            display: block;
+        #game-screen, #game-over-screen {
+            display: none;
         }
 
         #controls {
@@ -151,7 +150,7 @@
         const restartButton = document.getElementById('restart-button');
         const generateGridButton = document.getElementById('generate-grid');
 
-        // Show the start screen initially
+        // Initialize screens
         startScreen.style.display = 'block';
         gameScreen.style.display = 'none';
         gameOverScreen.style.display = 'none';
@@ -169,6 +168,11 @@
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'block';
             gameScreen.style.display = 'none';
+            // Clear AI interval if it exists
+            if (aiInterval) {
+                clearInterval(aiInterval);
+                aiInterval = null;
+            }
         });
 
         function createGrid(size) {
