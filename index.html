@@ -129,7 +129,7 @@
         let redSquareIndex = null;
         let aiInterval = null;
         let redSquareMoveCount = 0;
-        let aiIntervalTime = 1000; // Start at 1 second
+        let aiIntervalTime = 1000; // Start at 1 second (1000ms)
 
         // DOM elements
         const startScreen = document.getElementById('start-screen');
@@ -140,8 +140,10 @@
         const gridSizeInput = document.getElementById('grid-size');
         const speedInfo = document.getElementById('speed-info');
 
-        // Initialize
+        // Initialize screens
         startScreen.style.display = 'block';
+        gameScreen.style.display = 'none';
+        gameOverScreen.style.display = 'none';
 
         // Start the game
         startButton.addEventListener('click', () => {
@@ -150,27 +152,32 @@
                 alert('Grid size must be between 8 and 20.');
                 return;
             }
+            resetGame();
             startScreen.style.display = 'none';
             gameScreen.style.display = 'block';
-            gameOverScreen.style.display = 'none';
             createGrid();
         });
 
         // Restart the game
         restartButton.addEventListener('click', () => {
-            if (aiInterval) clearInterval(aiInterval);
-            redSquareMoveCount = 0;
-            aiIntervalTime = 1000;
+            resetGame();
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'block';
         });
 
-        // Create the grid
-        function createGrid() {
+        // Reset game state
+        function resetGame() {
+            if (aiInterval) {
+                clearInterval(aiInterval);
+                aiInterval = null;
+            }
             redSquareMoveCount = 0;
             aiIntervalTime = 1000;
-            speedInfo.textContent = `Red Square Moves: ${redSquareMoveCount} | Speed: ${aiIntervalTime / 1000.0}s`;
+            speedInfo.textContent = `Red Square Moves: ${redSquareMoveCount} | Speed: ${(aiIntervalTime / 1000).toFixed(1)}s`;
+        }
 
+        // Create the grid
+        function createGrid() {
             const gridContainer = document.getElementById('grid-container');
             gridContainer.innerHTML = '';
             gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
@@ -200,11 +207,8 @@
             redSquareIndex = randomIndex;
             grid[redSquareIndex] = 'red';
 
-            // Clear any existing AI interval
-            if (aiInterval) clearInterval(aiInterval);
             // Start AI movement
             aiInterval = setInterval(moveAISquare, aiIntervalTime);
-
             updateGrid();
         }
 
@@ -317,6 +321,7 @@
                 if (redSquareIndex === blackSquareIndex) {
                     clearInterval(aiInterval);
                     gameOver();
+                    return;
                 }
 
                 updateGrid();
