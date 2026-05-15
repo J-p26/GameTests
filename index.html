@@ -63,7 +63,7 @@
     <h1>Grid Square Game</h1>
     <div id="controls">
         <label for="grid-size">Grid Size:</label>
-        <input type="number" id="grid-size" min="2" max="20" value="10">
+        <input type="number" id="grid-size" min="5" max="20" value="10">
         <button id="generate-grid">Generate Grid</button>
     </div>
     <div id="grid-container"></div>
@@ -96,11 +96,14 @@
             blackSquareIndex = Math.floor(size * size / 2);
             grid[blackSquareIndex] = 'black';
 
-            // Place the red square in a random position (not the center)
+            // Place the red square at least 4 blocks away from the black square
             let randomIndex;
             do {
                 randomIndex = Math.floor(Math.random() * size * size);
-            } while (randomIndex === blackSquareIndex);
+            } while (
+                randomIndex === blackSquareIndex ||
+                getDistance(randomIndex, blackSquareIndex) < 4
+            );
             redSquareIndex = randomIndex;
             grid[redSquareIndex] = 'red';
 
@@ -112,6 +115,14 @@
             aiInterval = setInterval(moveAISquare, 1000);
 
             updateGrid();
+        }
+
+        function getDistance(index1, index2) {
+            const row1 = Math.floor(index1 / gridSize);
+            const col1 = index1 % gridSize;
+            const row2 = Math.floor(index2 / gridSize);
+            const col2 = index2 % gridSize;
+            return Math.abs(row1 - row2) + Math.abs(col1 - col2);
         }
 
         function handleCellClick(index) {
@@ -178,40 +189,35 @@
         function moveAISquare() {
             if (blackSquareIndex === null || redSquareIndex === null) return;
 
-            // Find the shortest path from red to black
-            const path = findShortestPath(redSquareIndex, blackSquareIndex);
-            if (path.length > 1) {
-                // Move one step closer
-                const nextIndex = path[1];
-                grid[redSquareIndex] = null;
-                grid[nextIndex] = 'red';
-                redSquareIndex = nextIndex;
-                updateGrid();
-            }
-        }
+            const neighbors = getNeighbors(redSquareIndex);
+            let bestMove = null;
+            let minDistance = Infinity;
 
-        function findShortestPath(start, end) {
-            const queue = [[start]];
-            const visited = new Set([start]);
-
-            while (queue.length > 0) {
-                const path = queue.shift();
-                const current = path[path.length - 1];
-
-                if (current === end) {
-                    return path;
-                }
-
-                const neighbors = getNeighbors(current);
-                for (const neighbor of neighbors) {
-                    if (!visited.has(neighbor) && grid[neighbor] === null) {
-                        visited.add(neighbor);
-                        queue.push([...path, neighbor]);
+            // Find the neighbor that minimizes the distance to the black square
+            for (const neighbor of neighbors) {
+                if (grid[neighbor] === null) {
+                    const distance = getDistance(neighbor, blackSquareIndex);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        bestMove = neighbor;
+                    } else if (distance === minDistance) {
+                        // Tie-breaker: prefer rightmost move
+                        const currentCol = redSquareIndex % gridSize;
+                        const neighborCol = neighbor % gridSize;
+                        if (neighborCol > currentCol) {
+                            bestMove = neighbor;
+                        }
                     }
                 }
             }
 
-            return [start]; // No path found
+            // Move to the best neighbor
+            if (bestMove !== null) {
+                grid[redSquareIndex] = null;
+                grid[bestMove] = 'red';
+                redSquareIndex = bestMove;
+                updateGrid();
+            }
         }
 
         function updateGrid() {
@@ -228,10 +234,10 @@
 
         document.getElementById('generate-grid').addEventListener('click', () => {
             const size = parseInt(document.getElementById('grid-size').value);
-            if (size >= 2 && size <= 20) {
+            if (size >= 5 && size <= 20) {
                 createGrid(size);
             } else {
-                alert('Please enter a grid size between 2 and 20.');
+                alert('Please enter a grid size between 5 and 20.');
             }
         });
 
