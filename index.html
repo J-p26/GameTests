@@ -13,7 +13,20 @@
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
+            text-align: center;
         }
+
+        #start-screen, #game-screen, #game-over-screen {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        #start-screen {
+            display: block;
+        }
+
         #controls {
             margin-bottom: 20px;
             display: flex;
@@ -21,10 +34,24 @@
             flex-wrap: wrap;
             justify-content: center;
         }
+
         input, button {
             padding: 8px;
             font-size: 16px;
+            cursor: pointer;
         }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
         #grid-container {
             display: grid;
             gap: 0;
@@ -32,7 +59,9 @@
             border: 2px solid #333;
             max-width: 90vw;
             max-height: 90vw;
+            margin: 0 auto;
         }
+
         .grid-cell {
             background-color: white;
             aspect-ratio: 1;
@@ -44,30 +73,67 @@
             align-items: center;
             cursor: pointer;
         }
+
         .black-square {
             background-color: black;
         }
+
         .red-square {
             background-color: red;
         }
+
         .highlight {
             background-color: lightgrey;
         }
+
         #status {
             margin-top: 20px;
             font-size: 18px;
         }
+
+        #instructions {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        #game-over-message {
+            font-size: 24px;
+            color: red;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>Grid Square Game</h1>
-    <div id="controls">
-        <label for="grid-size">Grid Size:</label>
-        <input type="number" id="grid-size" min="5" max="20" value="10">
-        <button id="generate-grid">Generate Grid</button>
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1>Grid Square Game</h1>
+        <div id="instructions">
+            <p>Click the black square to select it, then click a neighboring light grey square to move it.</p>
+            <p>The red square (AI) will move toward the black square every second.</p>
+            <p>If the red square catches the black square, it's game over!</p>
+        </div>
+        <button id="start-button">Start Game</button>
     </div>
-    <div id="grid-container"></div>
-    <div id="status">Click the black square to select it, then click a neighboring light grey square to move it.</div>
+
+    <!-- Game Screen -->
+    <div id="game-screen">
+        <h1>Grid Square Game</h1>
+        <div id="controls">
+            <label for="grid-size">Grid Size:</label>
+            <input type="number" id="grid-size" min="5" max="20" value="10">
+            <button id="generate-grid">Generate Grid</button>
+        </div>
+        <div id="grid-container"></div>
+        <div id="status">Click the black square to select it, then click a neighboring light grey square to move it.</div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen">
+        <h1>Game Over</h1>
+        <div id="game-over-message">The red square caught the black square!</div>
+        <button id="restart-button">Return to Start</button>
+    </div>
 
     <script>
         let gridSize = 10;
@@ -76,6 +142,34 @@
         let blackSquareIndex = null;
         let redSquareIndex = null;
         let aiInterval = null;
+
+        // DOM elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const generateGridButton = document.getElementById('generate-grid');
+
+        // Show the start screen initially
+        startScreen.style.display = 'block';
+        gameScreen.style.display = 'none';
+        gameOverScreen.style.display = 'none';
+
+        // Start the game
+        startButton.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            gameOverScreen.style.display = 'none';
+            createGrid(10);
+        });
+
+        // Restart the game
+        restartButton.addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'block';
+            gameScreen.style.display = 'none';
+        });
 
         function createGrid(size) {
             gridSize = size;
@@ -216,8 +310,21 @@
                 grid[redSquareIndex] = null;
                 grid[bestMove] = 'red';
                 redSquareIndex = bestMove;
+
+                // Check for game over
+                if (redSquareIndex === blackSquareIndex) {
+                    clearInterval(aiInterval);
+                    gameOver();
+                    return;
+                }
+
                 updateGrid();
             }
+        }
+
+        function gameOver() {
+            gameScreen.style.display = 'none';
+            gameOverScreen.style.display = 'block';
         }
 
         function updateGrid() {
@@ -232,7 +339,7 @@
             });
         }
 
-        document.getElementById('generate-grid').addEventListener('click', () => {
+        generateGridButton.addEventListener('click', () => {
             const size = parseInt(document.getElementById('grid-size').value);
             if (size >= 5 && size <= 20) {
                 createGrid(size);
@@ -240,9 +347,6 @@
                 alert('Please enter a grid size between 5 and 20.');
             }
         });
-
-        // Initialize the grid
-        createGrid(10);
     </script>
 </body>
 </html>
