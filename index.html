@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Square Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        #controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        input, button {
+            padding: 8px;
+            font-size: 16px;
+        }
+        #grid-container {
+            display: grid;
+            gap: 2px;
+            background-color: white;
+            border: 2px solid #333;
+        }
+        .grid-cell {
+            background-color: white;
+            border: 1px solid #ccc;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .black-square {
+            background-color: black;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Grid Square Game</h1>
+    <div id="controls">
+        <label for="grid-size">Grid Size:</label>
+        <input type="number" id="grid-size" min="2" max="20" value="5">
+        <button id="generate-grid">Generate Grid</button>
+    </div>
+    <div id="grid-container"></div>
+    <div id="status">Click a square to select it, then click another to move.</div>
+
+    <script>
+        let gridSize = 5;
+        let selectedSquare = null;
+        let grid = [];
+
+        function createGrid(size) {
+            gridSize = size;
+            const gridContainer = document.getElementById('grid-container');
+            gridContainer.innerHTML = '';
+            gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            grid = Array(size * size).fill(null);
+
+            for (let i = 0; i < size * size; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => handleCellClick(i));
+                gridContainer.appendChild(cell);
+            }
+
+            // Place the black square at the center by default
+            const centerIndex = Math.floor(size * size / 2);
+            grid[centerIndex] = 'black';
+            updateGrid();
+        }
+
+        function handleCellClick(index) {
+            if (selectedSquare === null) {
+                // Select the square if it's black
+                if (grid[index] === 'black') {
+                    selectedSquare = index;
+                    document.getElementById('status').textContent = `Selected square at position ${index}. Click another square to move it.`;
+                }
+            } else {
+                // Move the black square to the new position
+                grid[selectedSquare] = null;
+                grid[index] = 'black';
+                selectedSquare = null;
+                document.getElementById('status').textContent = 'Click a square to select it, then click another to move.';
+                updateGrid();
+            }
+        }
+
+        function updateGrid() {
+            const cells = document.querySelectorAll('.grid-cell');
+            cells.forEach((cell, i) => {
+                cell.classList.remove('black-square');
+                if (grid[i] === 'black') {
+                    cell.classList.add('black-square');
+                }
+            });
+        }
+
+        document.getElementById('generate-grid').addEventListener('click', () => {
+            const size = parseInt(document.getElementById('grid-size').value);
+            if (size >= 2 && size <= 20) {
+                createGrid(size);
+            } else {
+                alert('Please enter a grid size between 2 and 20.');
+            }
+        });
+
+        // Initialize the grid
+        createGrid(5);
+    </script>
+</body>
+</html>
