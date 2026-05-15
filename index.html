@@ -27,15 +27,18 @@
         }
         #grid-container {
             display: grid;
-            gap: 1px;
+            gap: 0;
             background-color: #333;
             border: 2px solid #333;
+            max-width: 90vw;
+            max-height: 90vw;
         }
         .grid-cell {
             background-color: white;
             aspect-ratio: 1;
-            min-width: 30px;
-            min-height: 30px;
+            min-width: 40px;
+            min-height: 40px;
+            border: 1px solid #333;
             display: flex;
             justify-content: center;
             align-items: center;
