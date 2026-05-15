@@ -29,9 +29,9 @@
         #controls {
             margin-bottom: 20px;
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
+            align-items: center;
         }
 
         input, button {
@@ -112,17 +112,16 @@
             <p>The red square (AI) will move toward the black square every second.</p>
             <p>If the red square catches the black square, it's game over!</p>
         </div>
+        <div id="controls">
+            <label for="grid-size">Grid Size (8-20):</label>
+            <input type="number" id="grid-size" min="8" max="20" value="10">
+        </div>
         <button id="start-button">Start Game</button>
     </div>
 
     <!-- Game Screen -->
     <div id="game-screen">
         <h1>Grid Square Game</h1>
-        <div id="controls">
-            <label for="grid-size">Grid Size:</label>
-            <input type="number" id="grid-size" min="5" max="20" value="10">
-            <button id="generate-grid">Generate Grid</button>
-        </div>
         <div id="grid-container"></div>
         <div id="status">Click the black square to select it, then click a neighboring light grey square to move it.</div>
     </div>
@@ -148,7 +147,7 @@
         const gameOverScreen = document.getElementById('game-over-screen');
         const startButton = document.getElementById('start-button');
         const restartButton = document.getElementById('restart-button');
-        const generateGridButton = document.getElementById('generate-grid');
+        const gridSizeInput = document.getElementById('grid-size');
 
         // Initialize screens
         startScreen.style.display = 'block';
@@ -157,10 +156,15 @@
 
         // Start the game
         startButton.addEventListener('click', () => {
+            gridSize = parseInt(gridSizeInput.value);
+            if (gridSize < 8 || gridSize > 20) {
+                alert('Please enter a grid size between 8 and 20.');
+                return;
+            }
             startScreen.style.display = 'none';
             gameScreen.style.display = 'block';
             gameOverScreen.style.display = 'none';
-            createGrid(10);
+            createGrid(gridSize);
         });
 
         // Restart the game
@@ -342,15 +346,6 @@
                 }
             });
         }
-
-        generateGridButton.addEventListener('click', () => {
-            const size = parseInt(document.getElementById('grid-size').value);
-            if (size >= 5 && size <= 20) {
-                createGrid(size);
-            } else {
-                alert('Please enter a grid size between 5 and 20.');
-            }
-        });
     </script>
 </body>
 </html>
